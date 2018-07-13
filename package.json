@@ -1,0 +1,11 @@
+{
+  "name": "tweetboss",
+  "version": "1.0.0",
+  "description": "A simple web app that lets you tweet like the boss you are.",
+  "main": "./src/server/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Erik Eppel",
+  "license": "ISC"
+}
