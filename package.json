@@ -5,7 +5,7 @@
 	"main": "./src/server/index.js",
 	"scripts": {
 		"start": "node src/server/index.js",
-		"build": "webpack --mode production",
+		"build": "webpack --mode development",
 		"client": "webpack-dev-server --mode development --devtool inline-source-map --hot",
 		"server": "nodemon src/server/index.js",
 		"dev": "concurrently \"npm run server\" \"npm run client\""
@@ -29,9 +29,11 @@
 		"webpack-dev-server": "^3.1.4"
 	},
 	"dependencies": {
+		"axios": "^0.18.0",
 		"dotenv": "^6.0.0",
 		"express": "^4.16.3",
 		"react": "^16.4.1",
-		"react-dom": "^16.4.1"
+		"react-dom": "^16.4.1",
+		"request": "^2.87.0"
 	}
 }
