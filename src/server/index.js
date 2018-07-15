@@ -1,5 +1,6 @@
 require('dotenv').config();
 
+const path = require('path');
 const express = require('express');
 const app = express();
 
@@ -23,6 +24,14 @@ const ref = db.ref('tweetboss/oauth-data');
 const usersRef = ref.child('users');
 
 app.use(express.static('dist'));
+
+app.get('/sign-in', (req, res) => {
+	res.sendFile(path.join(__dirname, '../../dist/index.html'), err => {
+		if (err) {
+			res.status(500).send(err);
+		}
+	});
+});
 
 let oauthToken;
 let oauthTokenSecret;
@@ -53,13 +62,9 @@ app.get('/api/sign-in', (req, res) => {
 });
 
 app.get('/api/oauth/oauth-verifier', (req, res) => {
-	console.log(req.url);
-
 	const queryData = url.parse(req.url, true).query;
 
-	console.log(
-		`Do the two oauth_tokens match? ... ${queryData.oauth_token === oauthToken}`
-	);
+	console.log(`oauth_tokens match: ${queryData.oauth_token === oauthToken}`);
 
 	request.post(
 		{
@@ -88,31 +93,78 @@ app.get('/api/oauth/oauth-verifier', (req, res) => {
 				oauth_token_secret: oauthTokenSecret
 			});
 
-			request.get(
-				{
-					oauth: {
-						consumer_key: process.env.CONSUMER_KEY,
-						consumer_secret: process.env.CONSUMER_SECRET,
-						token: oauthToken,
-						token_secret: oauthTokenSecret
-					},
-					url: 'https://api.twitter.com/1.1/users/show.json',
-					qs: {
-						screen_name: screenName,
-						user_id: userId
-					},
-					json: true
-				},
-				(error, response, body) => console.log(body)
-			);
-
 			res.cookie('userDetails', `userId=${userId}&screenName=${screenName}`, {
 				maxAge: 900000
 			});
 
+			// res.redirect('/'); // TODO: uncomment this redirect for non-dev testing and/or production
 			res.redirect('http://localhost:3000');
 		}
 	);
+});
+
+app.get('/api/user-details', (req, res) => {
+	const queryData = url.parse(req.url, true).query;
+
+	usersRef.once('value', data => {
+		const snapShot = data.val();
+
+		const userOauthData = snapShot[queryData.user_id];
+
+		request.get(
+			{
+				oauth: {
+					consumer_key: process.env.CONSUMER_KEY,
+					consumer_secret: process.env.CONSUMER_SECRET,
+					token: userOauthData.oauth_token,
+					token_secret: userOauthData.oauth_token_secret
+				},
+				url: 'https://api.twitter.com/1.1/users/show.json',
+				qs: {
+					screen_name: queryData.screen_name,
+					user_id: queryData.user_id
+				},
+				json: true
+			},
+			(error, response, body) => {
+				res.send({
+					name: body.name,
+					screenName: body.screen_name,
+					location: body.location,
+					description: body.description,
+					profileImageUrl: body.profile_image_url_https
+				});
+			}
+		);
+	});
+});
+
+app.get('/api/timeline', (req, res) => {
+	const queryData = url.parse(req.url, true).query;
+
+	usersRef.once('value', data => {
+		const snapShot = data.val();
+
+		const userOauthData = snapShot[queryData.user_id];
+
+		request.get(
+			{
+				oauth: {
+					consumer_key: process.env.CONSUMER_KEY,
+					consumer_secret: process.env.CONSUMER_SECRET,
+					token: userOauthData.oauth_token,
+					token_secret: userOauthData.oauth_token_secret
+				},
+				url: 'https://api.twitter.com/1.1/statuses/home_timeline.json',
+				qs: {
+					screen_name: queryData.screen_name,
+					user_id: queryData.user_id
+				},
+				json: true
+			},
+			(error, response, body) => res.send(body)
+		);
+	});
 });
 
 app.listen(8080, () => {
