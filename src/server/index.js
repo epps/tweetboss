@@ -96,8 +96,8 @@ app.get('/api/oauth/oauth-verifier', (req, res) => {
 				maxAge: 900000
 			});
 
-			// res.redirect('/'); // TODO: uncomment this redirect for non-dev testing and/or production
-			res.redirect('http://localhost:3000');
+			res.redirect('/'); // TODO: uncomment this redirect for non-dev testing and/or production
+			// res.redirect('http://localhost:3000');
 		}
 	);
 });
