@@ -8,7 +8,14 @@ const Tweet = props => {
 		<div className="card bg-light mb-3">
 			<div className="card-body">
 				<h5 className="card-title">
-					{author.name} {`@${author.screen_name}`}
+					<div className="row">
+						<div className="col-2">
+							<img style={{ borderRadius: '25%' }} src={author.profile_image_url_https} alt="User profile image" />
+						</div>
+						<div className="col">
+							{author.name} {`@${author.screen_name}`}
+						</div>
+					</div>
 				</h5>
 				<p className="card-text">{props.text}</p>
 			</div>

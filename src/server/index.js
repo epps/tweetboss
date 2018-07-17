@@ -1,5 +1,6 @@
 require('dotenv').config();
 
+const config = require('./config');
 const path = require('path');
 const express = require('express');
 const app = express();
@@ -14,8 +15,7 @@ firebase.initializeApp({
 	credential: firebase.credential.cert({
 		projectId: process.env.FIREBASE_PROJECT_ID,
 		clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-		privateKey: JSON.parse(process.env.FIREBASE_PRIVATE_KEY)
-		// privateKey: process.env.FIREBASE_PRIVATE_KEY // Uncomment for local development
+		privateKey: config.firebasePrivateKey
 	}),
 	databaseURL: 'https://tweetboss-55090.firebaseio.com'
 });
@@ -42,7 +42,7 @@ app.get('/api/sign-in', (req, res) => {
 		{
 			url: 'https://api.twitter.com/oauth/request_token',
 			oauth: {
-				callback: 'https://tweetboss.herokuapp.com/api/oauth/oauth-verifier',
+				callback: config.oauthVerifierCallbackUrl,
 				consumer_key: process.env.CONSUMER_KEY,
 				consumer_secret: process.env.CONSUMER_SECRET
 			}
@@ -97,8 +97,7 @@ app.get('/api/oauth/oauth-verifier', (req, res) => {
 				maxAge: 900000
 			});
 
-			res.redirect('/'); // TODO: uncomment this redirect for non-dev testing and/or production
-			// res.redirect('http://localhost:3000');
+			res.redirect(config.redirectOnOAuthSuccessUrl);
 		}
 	);
 });
@@ -199,4 +198,4 @@ app.get('/api/search', (req, res) => {
 	}
 });
 
-app.listen(process.env.PORT || 8080, () => console.log('Server listening on port ...'));
+app.listen(config.port, () => console.log(`Server listening on port ${config.port}`));
