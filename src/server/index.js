@@ -1,5 +1,5 @@
 require('dotenv').config();
-const config = require('./config');
+
 const path = require('path');
 const express = require('express');
 const app = express();
@@ -198,4 +198,4 @@ app.get('/api/search', (req, res) => {
 	}
 });
 
-app.listen(config.port, () => console.log(`Server listening on port ${config.port}`));
+app.listen(process.env.PORT || 8080, () => console.log('Server listening on port ...'));
