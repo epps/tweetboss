@@ -42,7 +42,7 @@ app.get('/api/sign-in', (req, res) => {
 		{
 			url: 'https://api.twitter.com/oauth/request_token',
 			oauth: {
-				callback: 'http://localhost:8080/api/oauth/oauth-verifier',
+				callback: 'https://tweetboss.herokuapp.com/api/oauth/oauth-verifier',
 				consumer_key: process.env.CONSUMER_KEY,
 				consumer_secret: process.env.CONSUMER_SECRET
 			}
