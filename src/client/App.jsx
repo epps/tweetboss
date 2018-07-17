@@ -1,21 +1,16 @@
 import React, { Component } from 'react';
-import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom';
-import {
-	Collapse,
-	Navbar,
-	NavbarToggler,
-	NavbarBrand,
-	Nav,
-	NavItem,
-	NavLink,
-	Button,
-	Form,
-	Input
-} from 'reactstrap';
+import { BrowserRouter, Route, Switch, Redirect, Link } from 'react-router-dom';
+import { Collapse, Navbar, NavbarToggler, Nav, NavItem, NavLink } from 'reactstrap';
 import Timeline from './Timeline';
 import SignIn from './SignIn';
+import FourOhFour from './FourOhFour';
+import SearchResults from './SearchResults';
+import SearchButton from './SearchButton';
 
-const FourOhFour = () => <h1>404</h1>;
+let twitterQuery = {
+	query: ''
+};
+let searchHistory = {};
 
 class App extends Component {
 	constructor(props) {
@@ -27,9 +22,13 @@ class App extends Component {
 			userDetails: {}
 		};
 
+		this.searchInput = React.createRef();
+
 		this.getCookie = this.getCookie.bind(this);
 		this.toggle = this.toggle.bind(this);
 		this.logOut = this.logOut.bind(this);
+		this.handleChange = this.handleChange.bind(this);
+		this.resetSearchTerm = this.resetSearchTerm.bind(this);
 	}
 
 	componentDidMount() {
@@ -62,7 +61,7 @@ class App extends Component {
 	}
 
 	logOut() {
-		document.cookie = '';
+		document.cookie = `userDetails='';path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT`;
 		this.setState({ isAuthenticated: false, userDetails: {} });
 	}
 
@@ -72,20 +71,36 @@ class App extends Component {
 		});
 	}
 
+	handleChange(event) {
+		if (event.target.value.trim().length === 0) {
+			event.target.value = '';
+			return;
+		}
+		twitterQuery.query = event.target.value.toLowerCase();
+	}
+
+	resetSearchTerm() {
+		this.searchInput.current.value = '';
+	}
+
 	render() {
 		const search = this.state.isAuthenticated ? (
-			<Form inline className="my-2 my-lg-0">
-				<Input type="search" name="search" placeholder="Search" />
-				<Button outline color="success">
-					Search
-				</Button>
-			</Form>
+			<div className="input-group">
+				<input
+					type="text"
+					className="form-control"
+					placeholder="Search"
+					ref={this.searchInput}
+					onChange={this.handleChange}
+				/>
+				<div className="input-group-append">{<SearchButton resetSearchTerm={this.resetSearchTerm} />}</div>
+			</div>
 		) : (
 			<span />
 		);
 
 		const logOut = this.state.isAuthenticated ? (
-			<NavItem>
+			<NavItem style={{ width: '30%' }}>
 				<NavLink href="#" onClick={this.logOut}>
 					Log Out
 				</NavLink>
@@ -98,8 +113,10 @@ class App extends Component {
 			<BrowserRouter>
 				<div>
 					<div>
-						<Navbar color="light" light expand="md">
-							<NavbarBrand href="/">Tweetboss</NavbarBrand>
+						<Navbar className="fixed-top" color="light" light expand="md">
+							<Link className="navbar-brand" to="/">
+								Tweetboss
+							</Link>
 							<NavbarToggler onClick={this.toggle} />
 							<Collapse isOpen={this.state.isOpen} navbar>
 								<Nav className="ml-auto" navbar>
@@ -109,17 +126,14 @@ class App extends Component {
 							</Collapse>
 						</Navbar>
 					</div>
-					<div className="container-fluid">
+					<div className="container-fluid" style={{ marginTop: '85px' }}>
 						<Switch>
 							<Route
 								exact
 								path="/"
 								render={props =>
 									this.state.isAuthenticated ? (
-										<Timeline
-											userId={this.state.userDetails.userId}
-											screenName={this.state.userDetails.screenName}
-										/>
+										<Timeline userId={this.state.userDetails.userId} screenName={this.state.userDetails.screenName} />
 									) : (
 										<Redirect
 											to={{
@@ -131,7 +145,6 @@ class App extends Component {
 								}
 							/>
 							<Route
-								exact
 								path="/sign-in"
 								render={props =>
 									!this.state.isAuthenticated ? (
@@ -145,6 +158,17 @@ class App extends Component {
 										/>
 									)
 								}
+							/>
+							<Route
+								path="/search-results"
+								render={props => (
+									<SearchResults
+										{...props}
+										userId={this.state.userDetails.userId}
+										twitterQuery={twitterQuery}
+										searchHistory={searchHistory}
+									/>
+								)}
 							/>
 							<Route component={FourOhFour} />
 						</Switch>

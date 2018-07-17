@@ -1,5 +1,5 @@
 require('dotenv').config();
-
+const config = require('./config');
 const path = require('path');
 const express = require('express');
 const app = express();
@@ -49,8 +49,6 @@ app.get('/api/sign-in', (req, res) => {
 		(error, response, body) => {
 			const responseData = qs.parse(body);
 
-			console.log('RESPONSE DATA ', responseData);
-
 			oauthToken = responseData.oauth_token;
 			oauthTokenSecret = responseData.oauth_token_secret;
 
@@ -64,7 +62,10 @@ app.get('/api/sign-in', (req, res) => {
 app.get('/api/oauth/oauth-verifier', (req, res) => {
 	const queryData = url.parse(req.url, true).query;
 
-	console.log(`oauth_tokens match: ${queryData.oauth_token === oauthToken}`);
+	if (queryData.oauth_token !== oauthToken) {
+		res.statusMessage = 'Authentication error';
+		res.status(400).end();
+	}
 
 	request.post(
 		{
@@ -79,8 +80,6 @@ app.get('/api/oauth/oauth-verifier', (req, res) => {
 		},
 		(error, response, body) => {
 			const responseData = qs.parse(body);
-
-			console.log(responseData);
 
 			const userId = responseData.user_id;
 			const screenName = responseData.screen_name;
@@ -167,6 +166,36 @@ app.get('/api/timeline', (req, res) => {
 	});
 });
 
-app.listen(8080, () => {
-	console.log('Listening on port 8080!');
+app.get('/api/search', (req, res) => {
+	const queryData = url.parse(req.url, true).query;
+
+	if (queryData.user_id === 'undefined') {
+		res.statusMessage = 'user_id is a required parameter';
+		res.status(400).end();
+	} else {
+		usersRef.once('value', data => {
+			const snapShot = data.val();
+
+			const userOauthData = snapShot[queryData.user_id];
+
+			request.get(
+				{
+					oauth: {
+						consumer_key: process.env.CONSUMER_KEY,
+						consumer_secret: process.env.CONSUMER_SECRET,
+						token: userOauthData.oauth_token,
+						token_secret: userOauthData.oauth_token_secret
+					},
+					url: `https://api.twitter.com/1.1/search/tweets.json`,
+					qs: {
+						q: queryData.twitter_query
+					},
+					json: true
+				},
+				(error, response, body) => res.send(body)
+			);
+		});
+	}
 });
+
+app.listen(config.port, () => console.log(`Server listening on port ${config.port}`));

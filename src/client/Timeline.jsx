@@ -6,7 +6,8 @@ class Timeline extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			timeline: []
+			timeline: [],
+			hasApiError: false
 		};
 	}
 
@@ -18,15 +19,27 @@ class Timeline extends Component {
 				}`
 			)
 			.then(response => {
-				this.setState({ timeline: response.data });
+				if (!response.data.errors) {
+					this.setState({ timeline: response.data });
+				} else {
+					this.setState({ hasApiError: true });
+				}
 			});
 	}
 
 	render() {
 		const timeline = this.state.timeline;
-		return (
-			<div>
-				{timeline.map(tweet => <Tweet key={tweet.id_str} {...tweet} />)}
+		return this.state.hasApiError ? (
+			<div className="alert alert-danger" role="alert">
+				An error has occurred. Please, try your request again.
+			</div>
+		) : (
+			<div className="row">
+				<div className="col" />
+				<div className="col-6">
+					{timeline.map(tweet => <Tweet key={tweet.id_str} {...tweet} />)}
+				</div>
+				<div className="col" />
 			</div>
 		);
 	}

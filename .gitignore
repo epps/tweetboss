@@ -1,6 +1,5 @@
 .vscode
 node_modules
-dist
 .env
 *.log
 tweetboss_serviceAccountKey.json
